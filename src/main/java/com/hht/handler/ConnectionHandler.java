@@ -16,7 +16,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hht.call.UserPwdQueCall;
+import com.hht.global.ChannelData;
+import com.hht.server.MQTTServer;
 import com.hht.vo.UserValidate;
 
 import io.netty.channel.Channel;
@@ -42,14 +47,19 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 public class ConnectionHandler extends ChannelInboundHandlerAdapter {
 
     /**
+     * 日志
+     */
+    private static final Logger log = LoggerFactory.getLogger(ConnectionHandler.class);
+
+    /**
      * 用于根据登录的客户端标识找channel
      */
-    private ConcurrentHashMap<String, Channel> str2channel;
-    
+    private ConcurrentHashMap<String, Channel> str2channel = ChannelData.getInstance().getStr2channel();
+
     /**
      * 用于根channel 找登录的客户端
      */
-    ConcurrentHashMap<Channel, String> channel2str;
+    ConcurrentHashMap<Channel, String> channel2str = ChannelData.getInstance().getChannel2str();
 
     /**
      * 缓存用户登录队列的长度
@@ -64,12 +74,12 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
     /**
      * 当前登录的连接数量
      */
-    AtomicInteger loginConns;// 当前登录的连接数量
+    AtomicInteger loginConns = new AtomicInteger();;// 当前登录的连接数量
 
     /**
      * 操作数据库线程组
      */
-    ExecutorService executorService=Executors.newFixedThreadPool(8);
+    ExecutorService executorService = Executors.newFixedThreadPool(8);
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -81,14 +91,20 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
             switch (messageType) {
             case CONNECT:
                 System.out.println("connect");
-                MqttConnectMessage connectMessage = (MqttConnectMessage) message;
-                loginConns.getAndIncrement();
-                ack(ctx, connectMessage);
-                loginConns.getAndDecrement();
+                try {
+                    MqttConnectMessage connectMessage = (MqttConnectMessage) message;
+                    loginConns.getAndIncrement();
+                    ack(ctx, connectMessage);
+                    loginConns.getAndDecrement();
 
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 break;
+
             case PINGREQ:
                 System.out.println("ping");
+                ping(ctx);
                 break;
 
             case DISCONNECT:
@@ -164,19 +180,21 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
                                                           // true，如果当前没有可用的空间，则返回
                                                           // false，不会抛异常：
                 // 塞满最大容量才执行,
+                log.info("排队");
                 List<UserValidate> userValidates = new ArrayList<UserValidate>();
                 userPwdValidateQue.drainTo(userValidates);// drainTo():一次性从BlockingQueue获取所有可用的数据对象（还可以指定获取数据的个数）,通过该方法，可以提升获取数据效率；不需要多次分批加锁或释放锁。
-                // subumitLoginCall(userValidates);
+                subumitLoginCall(userValidates);
             }
 
         } else { // 否则就单个处理
+            log.info("单个处理");
             List<UserValidate> userValidates = new ArrayList<UserValidate>();
             /*
              * if(userPwdValidateQue.size()>0){
              * userPwdValidateQue.drainTo(userValidates); }
              */
             userValidates.add(userValidate);
-            // subumitLoginCall(userValidates);
+            subumitLoginCall(userValidates);
         }
     }
 
@@ -191,6 +209,19 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
 
         executorService.submit(call);
         call = null;
+    }
+
+    /**
+     * 心跳ping
+     * 
+     * @param ctx
+     */
+    private void ping(ChannelHandlerContext ctx) {
+
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PINGRESP, false, MqttQoS.AT_LEAST_ONCE, false, 0);
+
+        MqttMessage mqttMessage = new MqttMessage(fixedHeader);
+        ctx.channel().writeAndFlush(mqttMessage);
     }
 
 }

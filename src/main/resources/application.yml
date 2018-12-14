@@ -6,6 +6,25 @@ server:
     buffer-size: 1024
     direct-buffers: true
     
+    
+spring:
+  datasource:
+    hikari:
+      connection-test-query: SELECT 1
+      minimum-idle: 5
+      maximum-pool-size: 50
+      pool-name: terminalpool
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/netty-mqtt?autoReconnect=true&useSSL=false&?useUnicode=true&characterEncoding=utf8&characterSetResults=utf8
+    username: ${AUTH_DB_PWD:root}
+    password: ${AUTH_DB_USER:root}
+    type: com.zaxxer.hikari.HikariDataSource
+    
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true  
+    
 netty:
   port: 6666    
     

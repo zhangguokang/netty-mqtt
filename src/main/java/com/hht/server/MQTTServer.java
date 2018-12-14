@@ -30,9 +30,7 @@ import io.netty.util.ResourceLeakDetector;
  * @description
  */
 public class MQTTServer {
-    /**
-     * 日志
-     */
+   
     /**
      * 日志
      */
