@@ -13,7 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * @author zhangguokang
  *
- * @description 
+ * @description 启动类
  */
 @SpringBootApplication
 public class NettyMQTTApplication {
