@@ -19,6 +19,9 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 public class MqttClient {
 
     public static void main(String[] args) {
+        // for (int i = 0; i < 100; i++) {
+        // test("tom", "123456");
+        // }
 
         test("tom", "123456");
 

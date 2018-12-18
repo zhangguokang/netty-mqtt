@@ -109,6 +109,7 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
 
             case DISCONNECT:
                 System.out.println("disconnect");
+                loginout(ctx);
                 break;
             default:
                 ctx.fireChannelRead(msg);
@@ -181,6 +182,7 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
                                                           // false，不会抛异常：
                 // 塞满最大容量才执行,
                 log.info("排队");
+                // System.exit(0);
                 List<UserValidate> userValidates = new ArrayList<UserValidate>();
                 userPwdValidateQue.drainTo(userValidates);// drainTo():一次性从BlockingQueue获取所有可用的数据对象（还可以指定获取数据的个数）,通过该方法，可以提升获取数据效率；不需要多次分批加锁或释放锁。
                 subumitLoginCall(userValidates);
@@ -222,6 +224,21 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
 
         MqttMessage mqttMessage = new MqttMessage(fixedHeader);
         ctx.channel().writeAndFlush(mqttMessage);
+    }
+
+    private void loginout(ChannelHandlerContext ctx) {
+        Channel channel = ctx.channel();
+        String ident = channel2str.get(channel);
+
+        if (ident != null) {
+            str2channel.remove(ident);
+            log.info(ident + "退出" + str2channel.size());
+
+            channel2str.remove(channel);
+            log.info(channel + "断开" + channel2str.size());
+        }
+
+        channel.close();
     }
 
 }

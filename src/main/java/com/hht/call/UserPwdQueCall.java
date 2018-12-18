@@ -12,6 +12,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import com.hht.entity.User;
 import com.hht.entity.UserExample;
+import com.hht.global.ChannelData;
 import com.hht.service.UserService;
 import com.hht.util.SpringUtil;
 import com.hht.vo.UserValidate;
@@ -34,9 +35,9 @@ public class UserPwdQueCall implements Callable<Void> {
 
     private List<UserValidate> userValidates;
 
-    private ConcurrentHashMap<String, Channel> str2channel;
+    private ConcurrentHashMap<String, Channel> str2channel = ChannelData.getInstance().getStr2channel();
 
-    private ConcurrentHashMap<Channel, String> channel2str;
+    private ConcurrentHashMap<Channel, String> channel2str = ChannelData.getInstance().getChannel2str();
 
     private static UserPwdQueCall userPwdQueCall;
 
@@ -76,6 +77,10 @@ public class UserPwdQueCall implements Callable<Void> {
                 if (userList != null && userList.size() > 0) {
                     // 用户名和密码正确
                     connectVariableHeader = new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_ACCEPTED, false);
+                    // 保存用户会话
+                    str2channel.put(userName, channel);
+                    channel2str.put(channel, userName);
+
                 } else {
                     //
                     connectVariableHeader = new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD, false);
