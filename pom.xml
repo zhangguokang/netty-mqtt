@@ -125,10 +125,11 @@
 			<artifactId>HikariCP</artifactId>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/com.typesafe.akka/akka-actor -->
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
-			<artifactId>akka-actor_2.11</artifactId>
-			<version>2.4.9</version>
+			<artifactId>akka-actor_2.12</artifactId>
+			<version>2.5.19</version>
 		</dependency>
 	</dependencies>
 	<build>
