@@ -1,22 +1,19 @@
 /**
  * Project Name:netty-mqtt
- * File Name:UserServiceImpl.java
+ * File Name:MsgRepServiceImpl.java
  * Package Name:com.hht.service.impl
- * Date:2018年12月14日
+ * Date:2018年12月19日
  * Copyright (c) 2018 深圳市鸿合创新信息技术 Inc.All Rights Reserved.
  */
 package com.hht.service.impl;
-
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.hht.dao.IUserDao;
-import com.hht.entity.User;
-import com.hht.entity.UserExample;
-import com.hht.service.UserService;
+import com.hht.dao.IMsgRepDao;
+import com.hht.entity.MsgRep;
+import com.hht.service.MsgRepService;
 
 /**
  * @author zhangguokang
@@ -26,13 +23,14 @@ import com.hht.service.UserService;
 
 @Service
 @Transactional
-public class UserServiceImpl implements UserService {
+public class MsgRepServiceImpl implements MsgRepService {
+
     @Autowired
-    private IUserDao userDao;
+    private IMsgRepDao msgRepDao;
 
     @Override
-    public List<User> findUserListByExample(UserExample example) {
-        return userDao.selectByExample(example);
+    public void save(MsgRep msgRep) {
+        msgRepDao.insertSelective(msgRep);
     }
 
 }

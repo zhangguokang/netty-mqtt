@@ -45,7 +45,7 @@
             enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" 
             enableSelectByExample="false" selectByExampleQueryId="false"/> -->
         <!--生成对应表及类名 -->
-        <table schema="general" tableName="user" domainObjectName="User">
+        <table schema="general" tableName="msg_rep" domainObjectName="MsgRep">
             <!--domain字段的命名规则，false:默认为驼峰命名 true:按数据库真实命名 -->
             <property name="useActualColumnNames" value="false" />
             <!-- 忽略列，不生成bean 字段 -->

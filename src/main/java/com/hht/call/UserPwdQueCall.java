@@ -39,20 +39,6 @@ public class UserPwdQueCall implements Callable<Void> {
 
     private ConcurrentHashMap<Channel, String> channel2str = ChannelData.getInstance().getChannel2str();
 
-    private static UserPwdQueCall userPwdQueCall;
-
-    public static UserPwdQueCall getInstance() {
-
-        if (userPwdQueCall == null)
-            userPwdQueCall = new UserPwdQueCall();
-
-        return userPwdQueCall;
-    }
-
-    private UserPwdQueCall() {
-
-    }
-
     public UserPwdQueCall(List<UserValidate> userValidates, ConcurrentHashMap<String, Channel> str2channel, ConcurrentHashMap<Channel, String> channel2str) {
         super();
         this.userValidates = userValidates;

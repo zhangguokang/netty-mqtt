@@ -15,15 +15,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.hht.call.UserPwdQueCall;
 import com.hht.global.ChannelData;
-import com.hht.server.MQTTServer;
 import com.hht.vo.UserValidate;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -79,7 +75,7 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
     /**
      * 操作数据库线程组
      */
-    ExecutorService executorService = Executors.newFixedThreadPool(8);
+    private ExecutorService executorService = Executors.newFixedThreadPool(8);
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -184,6 +180,7 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
                 log.info("排队");
                 // System.exit(0);
                 List<UserValidate> userValidates = new ArrayList<UserValidate>();
+                userValidates.add(userValidate);
                 userPwdValidateQue.drainTo(userValidates);// drainTo():一次性从BlockingQueue获取所有可用的数据对象（还可以指定获取数据的个数）,通过该方法，可以提升获取数据效率；不需要多次分批加锁或释放锁。
                 subumitLoginCall(userValidates);
             }

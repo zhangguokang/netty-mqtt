@@ -7,6 +7,7 @@
  */
 package com.hht.global;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import io.netty.channel.Channel;
 
@@ -19,6 +20,11 @@ public class ChannelData {
     private ConcurrentHashMap<String, Channel> str2channel = new ConcurrentHashMap<String, Channel>();
 
     private ConcurrentHashMap<Channel, String> channel2str = new ConcurrentHashMap<Channel, String>();
+
+    /**
+     * 每一个客户端订阅的主题
+     */
+    private ConcurrentHashMap<String, BlockingQueue<String>> submap = new ConcurrentHashMap<String, BlockingQueue<String>>();
 
     private static ChannelData channelData = null;
 
@@ -44,6 +50,14 @@ public class ChannelData {
 
     public void setChannel2str(ConcurrentHashMap<Channel, String> channel2str) {
         this.channel2str = channel2str;
+    }
+
+    public ConcurrentHashMap<String, BlockingQueue<String>> getSubmap() {
+        return submap;
+    }
+
+    public void setSubmap(ConcurrentHashMap<String, BlockingQueue<String>> submap) {
+        this.submap = submap;
     }
 
 }
