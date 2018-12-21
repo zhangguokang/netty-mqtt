@@ -13,6 +13,10 @@ public class SendedMsgRecord {
     
     
 
+    public SendedMsgRecord() {
+        super();
+    }
+
     public SendedMsgRecord(String clientid, Integer sendmsgid, Integer sendtimes, String sendclientid) {
         super();
         this.clientid = clientid;

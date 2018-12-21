@@ -64,19 +64,19 @@ public class MessageData {
     /**
      * 消息 队列
      */
-    private BlockingQueue<MsgRep> msgRepsque = new LinkedBlockingQueue<MsgRep>(MAXCACHEMSGSIZE);
+    public BlockingQueue<MsgRep> msgRepsque = new LinkedBlockingQueue<MsgRep>(MAXCACHEMSGSIZE);
 
     /**
      * 已经发送过的消息
      */
-    private BlockingQueue<SendedMsgRecord> msgSendedQue = new LinkedBlockingQueue<SendedMsgRecord>(MAXCACHEMSGSIZE);
+    public BlockingQueue<SendedMsgRecord> msgSendedQue = new LinkedBlockingQueue<SendedMsgRecord>(MAXCACHEMSGSIZE);
 
     /**
      * 准备更改状态的 已发送消息
      */
-    private BlockingQueue<SendedMsgRecord> readUpdateSendedQue = new LinkedBlockingQueue<SendedMsgRecord>(MAXCACHEMSGSIZE);
+    public BlockingQueue<SendedMsgRecord> readUpdateSendedQue = new LinkedBlockingQueue<SendedMsgRecord>(MAXCACHEMSGSIZE);
 
-    private BlockingQueue<SendedMsgRecord> readySendedQue = new LinkedBlockingQueue<SendedMsgRecord>(MAXCACHEMSGSIZE);
+    public BlockingQueue<SendedMsgRecord> readySendedQue = new LinkedBlockingQueue<SendedMsgRecord>(MAXCACHEMSGSIZE);
 
     /**
      * 已经发送过的消息 不能清除
