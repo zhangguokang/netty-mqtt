@@ -72,6 +72,7 @@ public class GetUnReadData implements Callable<Void> {
             List<MsgRep> result=new ArrayList<MsgRep>();
             SendedMsgRecord msg=new SendedMsgRecord();
             msg.setClientid(clientid);
+            List<Integer> msgids=null;
             
             //List<Integer> msgids= session.selectList(selectUnReadUserMsgIds,msg);
             
