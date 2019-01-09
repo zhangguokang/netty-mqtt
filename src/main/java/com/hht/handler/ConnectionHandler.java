@@ -10,7 +10,6 @@ package com.hht.handler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -18,7 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.hht.call.UserPwdQueCall;
-import com.hht.global.ChannelData;
+import com.hht.global.GlobalChannelGroup;
+import com.hht.session.NettySessionManager;
 import com.hht.vo.UserValidate;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -46,16 +46,6 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
      * 日志
      */
     private static final Logger log = LoggerFactory.getLogger(ConnectionHandler.class);
-
-    /**
-     * 用于根据登录的客户端标识找channel
-     */
-    private ConcurrentHashMap<String, Channel> str2channel = ChannelData.getInstance().getStr2channel();
-
-    /**
-     * 用于根channel 找登录的客户端
-     */
-    ConcurrentHashMap<Channel, String> channel2str = ChannelData.getInstance().getChannel2str();
 
     /**
      * 缓存用户登录队列的长度
@@ -86,7 +76,7 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
 
             switch (messageType) {
             case CONNECT:
-                System.out.println("connect");
+                log.info("connect");
                 try {
                     MqttConnectMessage connectMessage = (MqttConnectMessage) message;
                     loginConns.getAndIncrement();
@@ -99,12 +89,13 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
                 break;
 
             case PINGREQ:
-                System.out.println("ping");
+                log.info("ping");
                 ping(ctx);
+
                 break;
 
             case DISCONNECT:
-                System.out.println("disconnect");
+                log.info("disconnect");
                 loginout(ctx);
                 break;
             default:
@@ -155,13 +146,15 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
 
         String ident = connectPayload.clientIdentifier();// clientId
 
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0);
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false,
+                0);
         MqttConnAckVariableHeader connectVariableHeader = null;
-        String userName = connectPayload.userName();// userName
+        String userName = connectPayload.userName();
         String passWord = connectPayload.password();// passWord
         // 根据clientId判断是否重复登录
-        if (str2channel.containsKey(ident)) {// 重复登录
-            connectVariableHeader = new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED, false);
+        if (NettySessionManager.existSession(userName)) {// 重复登录
+            connectVariableHeader = new MqttConnAckVariableHeader(
+                    MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED, false);
 
             MqttConnAckMessage ackMessage = new MqttConnAckMessage(fixedHeader, connectVariableHeader);
             ctx.writeAndFlush(ackMessage);
@@ -188,10 +181,11 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
         } else { // 否则就单个处理
             log.info("单个处理");
             List<UserValidate> userValidates = new ArrayList<UserValidate>();
-            /*
-             * if(userPwdValidateQue.size()>0){
-             * userPwdValidateQue.drainTo(userValidates); }
-             */
+
+            if (userPwdValidateQue.size() > 0) {
+                userPwdValidateQue.drainTo(userValidates);
+            }
+
             userValidates.add(userValidate);
             subumitLoginCall(userValidates);
         }
@@ -204,7 +198,7 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
      */
     void subumitLoginCall(List<UserValidate> userValidates) {
 
-        UserPwdQueCall call = new UserPwdQueCall(userValidates, str2channel, channel2str);
+        UserPwdQueCall call = new UserPwdQueCall(userValidates);
 
         executorService.submit(call);
         call = null;
@@ -217,7 +211,8 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
      */
     private void ping(ChannelHandlerContext ctx) {
 
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PINGRESP, false, MqttQoS.AT_LEAST_ONCE, false, 0);
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PINGRESP, false, MqttQoS.AT_LEAST_ONCE, false,
+                0);
 
         MqttMessage mqttMessage = new MqttMessage(fixedHeader);
         ctx.channel().writeAndFlush(mqttMessage);
@@ -225,15 +220,7 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
 
     private void loginout(ChannelHandlerContext ctx) {
         Channel channel = ctx.channel();
-        String ident = channel2str.get(channel);
-
-        if (ident != null) {
-            str2channel.remove(ident);
-            log.info(ident + "退出" + str2channel.size());
-
-            channel2str.remove(channel);
-            log.info(channel + "断开" + channel2str.size());
-        }
+        GlobalChannelGroup.group.remove(channel);
 
         channel.close();
     }

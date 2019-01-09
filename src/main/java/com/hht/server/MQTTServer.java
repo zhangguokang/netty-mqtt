@@ -11,6 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.hht.global.GlobalChannelGroup;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.AdaptiveRecvByteBufAllocator;
@@ -71,7 +74,7 @@ public class MQTTServer {
         if (channel != null) {
             channel.close();
         }
-
+        GlobalChannelGroup.group.close();
         workGroup.shutdownGracefully();
         bossGroup.shutdownGracefully();
     }

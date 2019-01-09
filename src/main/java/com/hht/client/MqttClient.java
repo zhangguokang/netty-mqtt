@@ -16,6 +16,8 @@ import org.fusesource.mqtt.client.Topic;
 import org.fusesource.mqtt.client.Tracer;
 import org.fusesource.mqtt.codec.MQTTFrame;
 
+import com.hht.util.UUIDUtil;
+
 public class MqttClient {
 
     public static void main(String[] args) {
@@ -111,7 +113,7 @@ public class MqttClient {
 
         // MQTT设置说明
         mqtt.setHost("tcp://localhost:6666");
-        mqtt.setClientId(UUID.randomUUID().toString()); // 用于设置客户端会话的ID。在setCleanSession(false);被调用时，MQTT服务器利用该ID获得相应的会话。此ID应少于23个字符，默认根据本机地址、端口和时间自动生成
+        mqtt.setClientId(UUIDUtil.getUUID()); // 用于设置客户端会话的ID。在setCleanSession(false);被调用时，MQTT服务器利用该ID获得相应的会话。此ID应少于23个字符，默认根据本机地址、端口和时间自动生成
         mqtt.setCleanSession(false); // 若设为false，MQTT服务器将持久化客户端会话的主体订阅和ACK位置，默认为true
         mqtt.setKeepAlive((short) 60);// 定义客户端传来消息的最大时间间隔秒数，服务器可以据此判断与客户端的连接是否已经断开，从而避免TCP/IP超时的长时间等待
         mqtt.setUserName(userName);// 服务器认证用户名

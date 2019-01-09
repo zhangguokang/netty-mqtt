@@ -14,8 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import com.hht.call.GetUnReadData;
-import com.hht.global.ChannelData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -37,22 +37,13 @@ import io.netty.handler.codec.mqtt.MqttTopicSubscription;
  */
 @Sharable
 public class SubServiceHandler extends ChannelInboundHandlerAdapter {
-
+    
     /**
-     * 客户端订阅表
+     * 日志
      */
-    private ConcurrentHashMap<String, BlockingQueue<String>> submap = ChannelData.getInstance().getSubmap();
+    private static final Logger log = LoggerFactory.getLogger(SubServiceHandler.class);
 
-    /**
-     * 用于根据登录的客户端标识找channel
-     */
-    private ConcurrentHashMap<String, Channel> str2channel = ChannelData.getInstance().getStr2channel();
-
-    /**
-     * 用于根channel 找登录的客户端
-     */
-    private ConcurrentHashMap<Channel, String> channel2str = ChannelData.getInstance().getChannel2str();
-
+    
     /**
      * 操作数据库线程组
      */
@@ -68,7 +59,7 @@ public class SubServiceHandler extends ChannelInboundHandlerAdapter {
             switch (messageType) {
             case SUBSCRIBE:
                 MqttSubscribeMessage subscribeMessage = (MqttSubscribeMessage) message;
-                System.out.println("subscribe");
+                log.info("subscribe");
 
                 sub(ctx, subscribeMessage);
                 break;
@@ -110,19 +101,11 @@ public class SubServiceHandler extends ChannelInboundHandlerAdapter {
             topNames.add(subscription.topicName());
         }
         if (!topNames.isEmpty()) {
-            String iden = channel2str.get(ctx.channel());
+            
 
-            for (String topName : topNames) {
-                BlockingQueue<String> clientIdens = submap.get(topName);
-                if (clientIdens == null)
-                    clientIdens = new LinkedBlockingQueue<String>();
-                if (!clientIdens.contains(iden))
-                    clientIdens.offer(iden);
-                submap.put(topName, clientIdens);
+            
 
-            }
-
-            submitGetUnReadyMsg(iden);
+            
         }
     }
 
@@ -133,7 +116,7 @@ public class SubServiceHandler extends ChannelInboundHandlerAdapter {
      */
     private void submitGetUnReadyMsg(final String clientid) {
 
-        executorService.submit(new GetUnReadData(clientid));
+        
     }
 
 }

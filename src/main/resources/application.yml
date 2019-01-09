@@ -25,6 +25,18 @@ spring:
       ddl-auto: update
     show-sql: true  
     
+  redis:
+    database: 15
+    timeout: 0
+    host: 127.0.0.1
+    port: 6379
+    password: pass
+    pool:
+      max-active: 8
+      max-wait: -1
+      max-idle: 8
+      min-idle: 0   
+    
 netty:
   port: 6666    
     

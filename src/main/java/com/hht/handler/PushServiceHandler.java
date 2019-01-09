@@ -18,10 +18,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.hht.entity.MsgRep;
-import com.hht.global.ChannelData;
-import com.hht.global.MessageData;
-import com.hht.service.MsgRepService;
 import com.hht.util.SpringUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -50,32 +46,16 @@ public class PushServiceHandler extends ChannelInboundHandlerAdapter {
      */
     private static final Logger log = LoggerFactory.getLogger(PushServiceHandler.class);
 
-    /**
-     * 用于根据登录的客户端标识找channel
-     */
-    private ConcurrentHashMap<String, Channel> str2channel = ChannelData.getInstance().getStr2channel();
+   
 
-    /**
-     * 用于根channel 找登录的客户端
-     */
-    private ConcurrentHashMap<Channel, String> channel2str = ChannelData.getInstance().getChannel2str();
-    /**
-     * 每一个客户端订阅的主题
-     */
-    private ConcurrentHashMap<String, BlockingQueue<String>> submap = ChannelData.getInstance().getSubmap();
-
-    /**
-     * 消息 队列
-     */
-    private BlockingQueue<MsgRep> msgRepsque;
 
     /**
      * 操作数据库线程组
      */
     private ExecutorService executorService = Executors.newFixedThreadPool(8);
 
-    private MsgRepService msgRepService = SpringUtil.getBean(MsgRepService.class);
-    private MessageData messageDataService = MessageData.getInstance();
+    
+    
 
     private AtomicInteger atomicInteger = new AtomicInteger();
 
@@ -89,16 +69,17 @@ public class PushServiceHandler extends ChannelInboundHandlerAdapter {
             switch (messageType) {
             case PUBLISH:// 客户端发布普通消息
                 MqttPublishMessage messagepub = (MqttPublishMessage) msg;
-                System.out.println("publish");
+                log.info("publish");
 
                 pub(ctx, messagepub);
+                
                 break;
 
             case PUBREL: // 客户端发布释放
-                System.out.println("pubrel");
+                log.info("pubrel");
                 break;
             case PUBREC:// 客户端发布收到
-                System.out.println("pubrec");
+                log.info("pubrec");
             default:
                 ctx.fireChannelRead(msg);
                 break;
@@ -125,7 +106,7 @@ public class PushServiceHandler extends ChannelInboundHandlerAdapter {
         MqttPublishVariableHeader variableHeader = messagepub.variableHeader();
 
         Integer messageid = variableHeader.messageId();
-        String ident = channel2str.get(ctx.channel());
+        
 
         MqttQoS mqttQoS = messagepub.fixedHeader().qosLevel();
 
@@ -149,19 +130,13 @@ public class PushServiceHandler extends ChannelInboundHandlerAdapter {
         ByteBuf buf = messagepub.content();
         final byte[] bs = new byte[buf.readableBytes()];
         buf.readBytes(bs);
-        MsgRep msgRep = new MsgRep(messageid, topName, ident, bs);
+       
 
         // 如果不能放进去了 就清除并且提交到数据库
-        if (!msgRepsque.offer(msgRep)) {
-            List<MsgRep> msgReps = new ArrayList<MsgRep>();
-            msgReps.add(msgRep);
-            msgRepsque.drainTo(msgReps);
-
-            subSaveMsg(msgReps);
-        }
+        
 
         // 如果只是普通的发布 QOS级别低的话就直接发送了消息
-        messageDataService.sendPubMsg(msgRep, mqttQoS);
+       
 
         try {
             log.info("第" + atomicInteger.incrementAndGet() + "\t条发布的内容为" + topName + new String(bs, "UTF-8"));
@@ -172,23 +147,6 @@ public class PushServiceHandler extends ChannelInboundHandlerAdapter {
 
     }
 
-    /**
-     * 保持消息 将多余的消息放入数据库
-     * 
-     * @param msgReps
-     */
-    private void subSaveMsg(final Collection<MsgRep> msgReps) {
-
-        executorService.submit(new Runnable() {
-
-            @Override
-            public void run() {
-                if (msgReps != null) {
-                    msgReps.stream().forEach(msgRep -> msgRepService.save(msgRep));
-                }
-
-            }
-        });
-    }
+   
 
 }
